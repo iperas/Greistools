@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         parseArguments(a, outFilename, from, to);
 
         auto connection = Connection::FromSettings("Db");
-        sLogger.Info(QString("Connecting to database `%1`...").arg(connection->DatabaseName));
+        sLogger.Info(QString("Connecting to `%1`...").arg(connection->DatabaseName));
         connection->Connect();
 
         auto mySqlSource = make_unique<MySqlSource>(connection.get());
@@ -127,7 +127,8 @@ int main(int argc, char **argv)
         auto out = File::CreateBinary(outFilename);
         out->write(ba);
         out->close();
-        sLogger.Info(QString("Done!\r\nData successfully saved in `%1`.").arg(outFilename));
+        sLogger.Info(QString("Done!"));
+        sLogger.Info(QString("Data successfully saved into `%1`.").arg(outFilename));
 
         return 0;
     }
