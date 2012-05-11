@@ -69,7 +69,7 @@ int main(int argc, char **argv)
         if (wrapIntoTransaction)
         {
             connection->Database().rollback();
-            sLogger.Info("The transaction has been rolled back.");
+            sLogger.Info("Transaction has been rolled back.");
         }
         sLogger.Error(e.what());
         return 1;
