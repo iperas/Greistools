@@ -6,7 +6,7 @@
 #include "ProjectBase/Logger.h"
 #include "ProjectBase/Path.h"
 #include "ProjectBase/Connection.h"
-#include "JpsFile.h"
+#include "DataChunk.h"
 #include "MySqlSink.h"
 #include "MySqlSource.h"
 

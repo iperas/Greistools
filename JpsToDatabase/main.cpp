@@ -4,7 +4,7 @@
 #include "ProjectBase/Logger.h"
 #include "ProjectBase/Path.h"
 #include "ProjectBase/Connection.h"
-#include "JpsFile.h"
+#include "DataChunk.h"
 #include "MySqlSink.h"
 
 using namespace ProjectBase;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         foreach (QString filename, args)
         {
             sLogger.Info(QString("Reading file `%1`...").arg(filename));
-            auto file = JpsFile::FromFile(filename);
+            auto file = DataChunk::FromFile(filename);
 
             sLogger.Info(QString("Writing data into database `%1`...").arg(connection->DatabaseName));
             if (wrapIntoTransaction)
