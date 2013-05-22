@@ -1,0 +1,282 @@
+Index: JpsParser/DatabaseToJps/main.cpp
+===================================================================
+--- JpsParser/DatabaseToJps/main.cpp	(revision 752)
++++ JpsParser/DatabaseToJps/main.cpp	(working copy)
+@@ -183,8 +183,8 @@
+ {
+     try
+     {
+-        std::setlocale(LC_ALL, "Russian_Russia.1251");
+-        std::locale::global(std::locale("Russian_Russia.1251"));
++        std::setlocale(LC_ALL, "ru_RU.utf8");
++        std::locale::global(std::locale("ru_RU.utf8"));
+ 
+         QCoreApplication a(argc, argv);
+ 
+Index: JpsParser/ProjectBase/ProjectBase/Singleton.h
+===================================================================
+--- JpsParser/ProjectBase/ProjectBase/Singleton.h	(revision 752)
++++ JpsParser/ProjectBase/ProjectBase/Singleton.h	(working copy)
+@@ -8,6 +8,7 @@
+ #ifdef MT_SUPPORT_BOOST
+ #include <boost/thread/thread.hpp>
+ #endif
++#include "ProjectBase/SmartPtr.h"
+ 
+ namespace ProjectBase
+ {
+Index: JpsParser/ProjectBase/ProjectBase/DatabaseHelper.h
+===================================================================
+--- JpsParser/ProjectBase/ProjectBase/DatabaseHelper.h	(revision 752)
++++ JpsParser/ProjectBase/ProjectBase/DatabaseHelper.h	(working copy)
+@@ -75,4 +75,4 @@
+     };
+ }
+ 
+-#endif // ExceptionHelper_h__
+\ No newline at end of file
++#endif // ExceptionHelper_h__
+Index: JpsParser/ProjectBase/ProjectBase/SmartPtr.h
+===================================================================
+--- JpsParser/ProjectBase/ProjectBase/SmartPtr.h	(revision 753)
++++ JpsParser/ProjectBase/ProjectBase/SmartPtr.h	(working copy)
+@@ -3,8 +3,8 @@
+ #include <memory>
+ 
+ #define SMART_PTR_T(t) \
+-    typedef std::shared_ptr<##t> SharedPtr_t; \
+-    typedef std::unique_ptr<##t> UniquePtr_t;
++    typedef std::shared_ptr<t> SharedPtr_t; \
++    typedef std::unique_ptr<t> UniquePtr_t;
+ 
+ #define NULL_PTR_DECL \
+     static const SharedPtr_t sharedNullPtr; \
+Index: JpsParser/ProjectBase/ProjectBase/Logger.h
+===================================================================
+--- JpsParser/ProjectBase/ProjectBase/Logger.h	(revision 752)
++++ JpsParser/ProjectBase/ProjectBase/Logger.h	(working copy)
+@@ -4,6 +4,7 @@
+ #include "Singleton.h"
+ #include <boost/utility.hpp>
+ #include <log4cxx/logger.h>
++#include <log4cxx/log4cxx.h>
+ #include <QtCore/QString>
+ 
+ namespace ProjectBase
+@@ -29,4 +30,4 @@
+ 
+ #define sLogger SINGLETON_INSTANCE(::ProjectBase::Logger)
+ 
+-#endif // Logger_h__
+\ No newline at end of file
++#endif // Logger_h__
+Index: JpsParser/ProjectBase/src/Connection.cpp
+===================================================================
+--- JpsParser/ProjectBase/src/Connection.cpp	(revision 752)
++++ JpsParser/ProjectBase/src/Connection.cpp	(working copy)
+@@ -1,5 +1,5 @@
+-#include "Connection.h"
+-#include "SmartPtr.h"
++#include "ProjectBase/Connection.h"
++#include "ProjectBase/SmartPtr.h"
+ 
+ namespace ProjectBase
+ {
+Index: JpsParser/ProjectBase/src/DatabaseHelper.cpp
+===================================================================
+--- JpsParser/ProjectBase/src/DatabaseHelper.cpp	(revision 752)
++++ JpsParser/ProjectBase/src/DatabaseHelper.cpp	(working copy)
+@@ -1,5 +1,5 @@
+-#include "DatabaseHelper.h"
+-#include "DatabaseException.h"
++#include "ProjectBase/DatabaseHelper.h"
++#include "ProjectBase/DatabaseException.h"
+ 
+ namespace ProjectBase
+ {
+Index: JpsParser/ProjectBase/src/BitConverter.cpp
+===================================================================
+--- JpsParser/ProjectBase/src/BitConverter.cpp	(revision 752)
++++ JpsParser/ProjectBase/src/BitConverter.cpp	(working copy)
+@@ -1,4 +1,4 @@
+-#include "BitConverter.h"
++#include "ProjectBase/BitConverter.h"
+ 
+ namespace ProjectBase
+ {
+Index: JpsParser/Greis/MySqlSourceGeneratedMembers.cpp
+===================================================================
+--- JpsParser/Greis/MySqlSourceGeneratedMembers.cpp	(revision 752)
++++ JpsParser/Greis/MySqlSourceGeneratedMembers.cpp	(working copy)
+@@ -1,7 +1,7 @@
+ #include "MySqlSource.h"
+ #include <vector>
+-#include "ProjectBase\SmartPtr.h"
+-#include "ProjectBase\Connection.h"
++#include "ProjectBase/SmartPtr.h"
++#include "ProjectBase/Connection.h"
+ #include "ECustomTypeId.h"
+ #include "DataChunk.h"
+ #include "AllStdMessages.h"
+Index: JpsParser/Greis/MySqlSink.cpp
+===================================================================
+--- JpsParser/Greis/MySqlSink.cpp	(revision 752)
++++ JpsParser/Greis/MySqlSink.cpp	(working copy)
+@@ -1,5 +1,5 @@
+ #include "MySqlSink.h"
+-#include "ProjectBase\Connection.h"
++#include "ProjectBase/Connection.h"
+ #include "AllStdMessages.h"
+ #include <string>
+ #include "RawStdMessage.h"
+@@ -24,7 +24,7 @@
+         {
+             auto id = query.value(0).toInt();
+             auto code = query.value(1).toString();
+-            std::string codeStr(code.toAscii(), code.size());
++            std::string codeStr(code.toAscii().constData(), code.size());
+             _codeIds[codeStr] = id;
+         }
+     }
+Index: JpsParser/Greis/MySqlSource.h
+===================================================================
+--- JpsParser/Greis/MySqlSource.h	(revision 752)
++++ JpsParser/Greis/MySqlSource.h	(working copy)
+@@ -143,7 +143,7 @@
+         auto val = buffer.take(dbId);
+         if (val != nullptr)
+         {
+-            return T::UniquePtr_t(dynamic_cast<T*>(val));
++            return typename T::UniquePtr_t(dynamic_cast<T*>(val));
+         }
+ 
+         QString queryStr = _ctQueries.value(ctId);
+@@ -153,7 +153,7 @@
+         queryStr = queryStr.arg(_from.toMSecsSinceEpoch()).arg(_to.toMSecsSinceEpoch());
+ 
+         int ctCount = 0;
+-        T::UniquePtr_t retVal;
++        typename T::UniquePtr_t retVal;
+         QSqlQuery query = _dbHelper->ExecuteQuery(queryStr);
+         while (query.next())
+         {
+@@ -171,7 +171,7 @@
+ 
+             if (id == dbId)
+             {
+-                retVal = T::UniquePtr_t(dynamic_cast<T*>(ct));
++                retVal = typename T::UniquePtr_t(dynamic_cast<T*>(ct));
+             }
+             buffer[id] = ct;
+             ++ctCount;
+Index: JpsParser/Greis/GreisMysqlSerializer.h
+===================================================================
+--- JpsParser/Greis/GreisMysqlSerializer.h	(revision 752)
++++ JpsParser/Greis/GreisMysqlSerializer.h	(working copy)
+@@ -102,7 +102,7 @@
+         inline void Deserialize(const QVariant& val, std::string& out)
+         {
+             auto qs = val.toString().toAscii();
+-            out = std::string(qs, qs.size());
++            out = std::string(qs.constData(), qs.size());
+         }
+ 
+         inline void Deserialize(const QVariant& val, unsigned char& out)
+Index: JpsParser/Greis/StdMessages/BaseLineStdMessage.cpp
+===================================================================
+--- JpsParser/Greis/StdMessages/BaseLineStdMessage.cpp	(revision 752)
++++ JpsParser/Greis/StdMessages/BaseLineStdMessage.cpp	(working copy)
+@@ -1,4 +1,4 @@
+-#include "BaselineStdMessage.h"
++#include "BaseLineStdMessage.h"
+ #include <cassert>
+ #include "ChecksumComputer.h"
+ #include "ProjectBase/Logger.h"
+Index: JpsParser/Greis/FileBinaryStream.h
+===================================================================
+--- JpsParser/Greis/FileBinaryStream.h	(revision 752)
++++ JpsParser/Greis/FileBinaryStream.h	(working copy)
+@@ -1,7 +1,7 @@
+ #pragma once
+ 
+ #include "IBinaryStream.h"
+-#include "ProjectBase\File.h"
++#include "ProjectBase/File.h"
+ 
+ namespace Greis
+ {
+Index: JpsParser/Greis/GreisBinarySerializer.h
+===================================================================
+--- JpsParser/Greis/GreisBinarySerializer.h	(revision 752)
++++ JpsParser/Greis/GreisBinarySerializer.h	(working copy)
+@@ -5,7 +5,8 @@
+ #include <string>
+ #include <vector>
+ #include <cassert>
+-#include "ProjectBase\BitConverter.h"
++#include "ProjectBase/BitConverter.h"
++#include "ProjectBase/SmartPtr.h"
+ 
+ namespace Greis
+ {
+Index: JpsParser/Greis/AllStdMessages.h
+===================================================================
+--- JpsParser/Greis/AllStdMessages.h	(revision 752)
++++ JpsParser/Greis/AllStdMessages.h	(working copy)
+@@ -4,7 +4,7 @@
+ #include "StdMessages/AngularVelocityStdMessage.h"
+ #include "StdMessages/AntNameStdMessage.h"
+ #include "StdMessages/BaseInfoStdMessage.h"
+-#include "StdMessages/BaselineStdMessage.h"
++#include "StdMessages/BaseLineStdMessage.h"
+ #include "StdMessages/ClockOffsetsStdMessage.h"
+ #include "StdMessages/CNRStdMessage.h"
+ #include "StdMessages/CNR4StdMessage.h"
+Index: JpsParser/Greis/MySqlSource.cpp
+===================================================================
+--- JpsParser/Greis/MySqlSource.cpp	(revision 752)
++++ JpsParser/Greis/MySqlSource.cpp	(working copy)
+@@ -1,7 +1,7 @@
+ #include "MySqlSource.h"
+ #include <vector>
+-#include "ProjectBase\SmartPtr.h"
+-#include "ProjectBase\Connection.h"
++#include "ProjectBase/SmartPtr.h"
++#include "ProjectBase/Connection.h"
+ #include "ECustomTypeId.h"
+ #include "DataChunk.h"
+ #include "AllStdMessages.h"
+@@ -21,7 +21,7 @@
+         {
+             auto id = query.value(0).toInt();
+             auto code = query.value(1).toString();
+-            std::string codeStr(code.toAscii(), code.size());
++            std::string codeStr(code.toAscii().constData(), code.size());
+             _codes[id] = codeStr;
+         }
+ 
+Index: JpsParser/JpsParser/Domain/MetaInfoReader.h
+===================================================================
+--- JpsParser/JpsParser/Domain/MetaInfoReader.h	(revision 752)
++++ JpsParser/JpsParser/Domain/MetaInfoReader.h	(working copy)
+@@ -1,10 +1,11 @@
+ #ifndef MetaInfoReader_h__
+ #define MetaInfoReader_h__
+ 
+-#include "ProjectBase\Connection.h"
++#include "ProjectBase/Connection.h"
+ #include "MetaInfo.h"
+-#include "ProjectBase\SmartPtr.h"
++#include "ProjectBase/SmartPtr.h"
+ #include "JpsFile.h"
++#include <boost/assert.hpp>
+ 
+ using namespace ProjectBase;
+ 
+@@ -473,4 +474,4 @@
+     };
+ }
+ 
+-#endif // MetaInfoReader_h__
+\ No newline at end of file
++#endif // MetaInfoReader_h__
