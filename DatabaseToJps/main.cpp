@@ -183,8 +183,8 @@ int main(int argc, char **argv)
 {
     try
     {
-        std::setlocale(LC_ALL, "Russian_Russia.1251");
-        std::locale::global(std::locale("Russian_Russia.1251"));
+        std::setlocale(LC_ALL, "ru_RU.utf8");
+        std::locale::global(std::locale("ru_RU.utf8"));
 
         QCoreApplication a(argc, argv);
 
@@ -234,6 +234,7 @@ int main(int argc, char **argv)
     }
     catch (Exception& e)
     {
+        sLogger.Error("An error has occurred");
         sLogger.Error(e.what());
         return 1;
     }

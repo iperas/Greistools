@@ -11,12 +11,12 @@
 CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
-CFLAGS        = -pipe -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic -O2 -Wall -W -D_REENTRANT $(DEFINES)
-CXXFLAGS      = -std=c++11 -pipe -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -m64 -mtune=generic -O2 -Wall -W -D_REENTRANT $(DEFINES)
-INCPATH       = -I/usr/lib64/qt48/mkspecs/linux-g++ -I. -I/usr/include/QtCore -I/usr/include/QtGui -I/usr/include -I. -I../Greis -I../Greis/StdMessages -I../Greis/CustomTypes -I../Greis.Tests -Ijpslogd -I../JpsParser/Domain -I../ProjectBase/ProjectBase -I../ProjectBase -I../
+CFLAGS        = -pipe -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -O2 -Wall -W -D_REENTRANT $(DEFINES)
+CXXFLAGS      = -std=c++11 -pipe -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector --param=ssp-buffer-size=4 -mtune=generic -O2 -Wall -W -D_REENTRANT $(DEFINES)
+INCPATH       = -I/usr/lib/qt/mkspecs/linux-g++ -I. -I/usr/include/QtCore -I/usr/include/QtGui -I/usr/include -I. -I../Greis -I../Greis/StdMessages -I../Greis/CustomTypes -I../Greis.Tests -Ijpslogd -I../JpsParser/Domain -I../ProjectBase/ProjectBase -I../ProjectBase -I../
 LINK          = g++
 LFLAGS        = -Wl,-O1
-LIBS          = $(SUBLIBS)  -L/usr/lib64/qt48 -lQtGui -L/usr/lib64/qt48 -lQtCore -lpthread -llog4cxx -lQtSql
+LIBS          = $(SUBLIBS)  -L/usr/lib/qt -lQtGui -L/usr/lib/qt -lQtCore -lpthread -llog4cxx -lQtSql
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/bin/qmake-qt48
