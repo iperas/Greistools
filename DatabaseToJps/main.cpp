@@ -109,7 +109,7 @@ void parseArgsPo(int argc, char **argv)
 void parseArguments(const QCoreApplication& a, QString& database, QString& outFilename, QDateTime& from, QDateTime& to)
 {
     auto args = a.arguments();
-    auto usageStr = QString("Usage: 'app.exe <output-filename>' [<date-from> [date-to]]\r\n") + 
+    auto usageStr = QString("Usage: 'app.exe <database> <output-filename>' [<date-from> [date-to]]\r\n") + 
         QString("\r\n") + 
         QString("Where:\r\n") + 
         QString("    <database> - source database name.\r\n") + 
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
     try
     {
         std::setlocale(LC_ALL, "ru_RU.utf8");
-        std::locale::global(std::locale("ru_RU.utf8"));
+        //std::locale::global(std::locale("ru_RU.utf8"));
 
         QCoreApplication a(argc, argv);
 
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
         auto jpsFile = mySqlSource->ReadRange(from, to);
 
         sLogger.Info("Done!");
-        sLogger.Info("Binarizing data...");
+        sLogger.Info("Binarizing data..."); 
         auto ba = jpsFile->ToByteArray();
 
         sLogger.Info("Done!");

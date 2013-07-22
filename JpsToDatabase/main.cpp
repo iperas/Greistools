@@ -1,6 +1,7 @@
 #include <QtCore/QtCore>
 #include <clocale>
 #include <locale>
+#include <iostream>
 #include "ProjectBase/Logger.h"
 #include "ProjectBase/Path.h"
 #include "ProjectBase/Connection.h"
@@ -9,6 +10,79 @@
 
 using namespace ProjectBase;
 using namespace Greis;
+
+void applyArguments(QStringList& args, Connection* connection)
+{
+    const QString databaseName =    "-DatabaseName";
+    const QString username =        "-Username";
+    const QString password =        "-Password";
+    const QString port =            "-Port";
+    const QString hostname =        "-Hostname";
+    QVector<QString> argumentName;
+    argumentName << databaseName;
+    argumentName << username;
+    argumentName << password;
+    argumentName << port;
+    argumentName << hostname;
+
+    std::cout << "Reading console parameters:" << std::endl;
+    bool waitingForValue = false;
+    QString key;
+    QString value;
+    int parameterArgsCount = 0;
+    foreach (QString arg, args)
+    {
+        if (argumentName.contains(arg) && !waitingForValue)
+        {
+            key = arg;
+            waitingForValue = true;
+            parameterArgsCount++;
+        }
+        else if (waitingForValue)
+        {
+            value = arg;
+            std::cout << key.toStdString() << " = " << value.toStdString() << std::endl;
+            if (key == databaseName)
+            {
+                connection->DatabaseName = value;
+            }
+            else if (key == username)
+            {
+                connection->Username = value;
+            }
+            else if (key == password)
+            {
+                connection->Password = value;
+            }
+            else if (key == port)
+            {
+                connection->Port = value.toInt();
+            }
+            else if (key == hostname)
+            {
+                connection->Hostname = value;
+            }
+            else
+            {
+                std::cout << "Invalid parameter key " << key.toStdString() << std::endl;
+            }
+            
+            waitingForValue = false;
+            parameterArgsCount++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    for (int i = 0; i < parameterArgsCount; i++)
+    {
+        args.pop_front();
+    }
+
+    std::cout << "Done!" << std::endl;
+}
 
 int main(int argc, char **argv)
 {
@@ -29,15 +103,28 @@ int main(int argc, char **argv)
 
         sLogger.Initialize(Path::Combine(Path::ApplicationDirPath(), "logger.config.xml"));
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
+        
+        auto args = a.arguments();
+        args.pop_front();
+    
+        if (args.size() == 1 && args[0] == "-help")
+        {
+            
+            auto usageStr = QString("Usage: 'app.exe [-DatabaseName databaseName] [-Username userName] [-Password password] [-Port port] [-Hostname hostName] <input-filename> [<other-input-filenames>]\r\n") + 
+                QString("\r\n") + 
+                QString("Where:\r\n") + 
+                QString("    <output-file> - path to input jps file.\r\n") + 
+                QString("\r\n");
+            std::cout << usageStr.toStdString();
+            return 0;
+        }
 
         // Connecting to database
         wrapIntoTransaction = sIniSettings.value("WrapIntoTransaction", false).toBool();
         int inserterBatchSize = sIniSettings.value("inserterBatchSize", 10000).toInt();
         connection = Connection::FromSettings("Db");
+        applyArguments(args, connection.get());
         connection->Connect();
-
-        auto args = a.arguments();
-        args.pop_front();
 
         foreach (QString filename, args)
         {
