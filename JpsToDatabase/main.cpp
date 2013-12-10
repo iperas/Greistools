@@ -125,9 +125,71 @@ int main(int argc, char **argv)
         connection = Connection::FromSettings("Db");
         applyArguments(args, connection.get());
         connection->Connect();
+        
+        auto _dbHelper = connection->DbHelper();
+        /*auto query = _dbHelper->ExecuteQuery("SET autocommit=0");
+        DatabaseHelper::ThrowIfError(query);
+        query = _dbHelper->ExecuteQuery("SET unique_checks=0");
+        DatabaseHelper::ThrowIfError(query);
+        query = _dbHelper->ExecuteQuery("SET foreign_key_checks=0");
+        DatabaseHelper::ThrowIfError(query);*/
 
         foreach (QString filename, args)
         {
+            //QFile file2(filename);
+            //file2.open(QIODevice::ReadOnly);
+            //while (!file2.atEnd()) {
+            //    QVariantList tests;
+            //    int i = 0;
+            //    while (!file2.atEnd() && i < 1000) {
+            //        QByteArray data = file2.read(1000);
+            //        tests << data;
+            //        i++;
+            //    }
+
+            //    if (i == 0)
+            //    {
+            //        break;
+            //    }
+
+            //    QSqlQuery query = _dbHelper->ExecuteQuery("");
+
+            //    auto _insertQuery = QString("INSERT INTO `test_blob` (test,test2) VALUES ");
+            //    for (int j = 0; j < i - 1; j++)
+            //    {
+            //        _insertQuery.append("(?,?),");
+            //    }
+            //    _insertQuery.append("(?,?)");
+
+            //    sLogger.Debug(_insertQuery);
+            //    sLogger.Debug(QString::number(i));
+            //    query.prepare(_insertQuery);
+            //    DatabaseHelper::ThrowIfError(query);
+
+            //    foreach (QVariant v, tests)
+            //    {
+            //        query.addBindValue(v);
+            //        query.addBindValue(123);
+            //    }
+
+            //    //query.addBindValue(tests);
+            //    //if (i >= 5)
+            //    {
+            //        //query.execBatch();
+            //        query.exec();
+            //        DatabaseHelper::ThrowIfError(query);
+            //    }
+            //}
+            
+                /*auto query = _dbHelper->ExecuteQuery("COMMIT");
+                DatabaseHelper::ThrowIfError(query);
+                query = _dbHelper->ExecuteQuery("SET foreign_key_checks=1");
+                DatabaseHelper::ThrowIfError(query);
+                query = _dbHelper->ExecuteQuery("SET unique_checks=1");
+                DatabaseHelper::ThrowIfError(query);
+                query = _dbHelper->ExecuteQuery("SET autocommit=1");
+                DatabaseHelper::ThrowIfError(query);*/
+
             sLogger.Info(QString("Reading file `%1`...").arg(filename));
             auto file = DataChunk::FromFile(filename);
 
