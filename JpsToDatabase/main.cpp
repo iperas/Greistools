@@ -13,11 +13,11 @@ using namespace Greis;
 
 void applyArguments(QStringList& args, Connection* connection)
 {
-    const QString databaseName =    "-DatabaseName";
-    const QString username =        "-Username";
-    const QString password =        "-Password";
-    const QString port =            "-Port";
-    const QString hostname =        "-Hostname";
+    const QString databaseName =    "--database";
+    const QString username =        "--username";
+    const QString password =        "--password";
+    const QString port =            "--port";
+    const QString hostname =        "--host";
     QVector<QString> argumentName;
     argumentName << databaseName;
     argumentName << username;
@@ -101,23 +101,24 @@ int main(int argc, char **argv)
         QTextCodec::setCodecForLocale(codec);
         QTextCodec::setCodecForTr(codec);
 
-        sLogger.Initialize(Path::Combine(Path::ApplicationDirPath(), "logger.config.xml"));
+        sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
         
-        auto args = a.arguments();
-        args.pop_front();
-    
-        if (args.size() == 1 && args[0] == "-help")
+        auto args = a.arguments();        
+		if (args.size() == 2 && args[1] == "--help" || args[1] == "-h" || args.size() == 1)
         {
             
-            auto usageStr = QString("Usage: 'app.exe [-DatabaseName databaseName] [-Username userName] [-Password password] [-Port port] [-Hostname hostName] <input-filename> [<other-input-filenames>]\r\n") + 
+            auto usageStr = QString("Usage: 'JpsToDatabase.exe [--database databaseName] [--username userName] [--password password] [--port port] [--host hostName] <input-filename> [<other-input-filenames>]\r\n") + 
                 QString("\r\n") + 
                 QString("Where:\r\n") + 
-                QString("    <output-file> - path to input jps file.\r\n") + 
+                QString("    <input-file> - path to input jps file.\r\n") + 
                 QString("\r\n");
             std::cout << usageStr.toStdString();
-            return 0;
+            return 10022;
         }
+        args.pop_front();
+    
+
 
         // Connecting to database
         wrapIntoTransaction = sIniSettings.value("WrapIntoTransaction", false).toBool();

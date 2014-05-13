@@ -194,7 +194,7 @@ int main(int argc, char **argv)
         QTextCodec::setCodecForLocale(codec);
         QTextCodec::setCodecForTr(codec);
 
-        sLogger.Initialize(Path::Combine(Path::ApplicationDirPath(), "logger.config.xml"));
+        sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
 
         QString databaseName;
