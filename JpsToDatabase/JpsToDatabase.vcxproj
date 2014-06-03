@@ -75,8 +75,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(BOOST_DIR)\lib;$(LOG4CXX)\lib\$(PlatformToolset)\$(Configuration);$(QTDIR)\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>log4cxx.lib;QtSql4.lib;QtCore4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\..\lib;$(QTDIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>QtSql4.lib;QtCore4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

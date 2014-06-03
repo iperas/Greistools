@@ -1,5 +1,5 @@
 #include <QtCore/QtCore>
-#include <boost/program_options.hpp>
+//#include <boost/program_options.hpp>
 #include <clocale>
 #include <locale>
 #include <iostream>
@@ -12,7 +12,7 @@
 
 using namespace ProjectBase;
 using namespace Greis;
-namespace po = boost::program_options;
+//namespace po = boost::program_options;
 
 /* Auxiliary functions for checking input for validity. */
 
