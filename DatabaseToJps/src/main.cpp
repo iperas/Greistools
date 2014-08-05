@@ -3,14 +3,14 @@
 #include <clocale>
 #include <locale>
 #include <iostream>
-#include "ProjectBase/Logger.h"
-#include "ProjectBase/Path.h"
-#include "ProjectBase/Connection.h"
-#include "DataChunk.h"
-#include "MySqlSink.h"
-#include "MySqlSource.h"
+#include "Common/Logger.h"
+#include "Common/Path.h"
+#include "Common/Connection.h"
+#include "Greis/DataChunk.h"
+#include "Greis/MySqlSink.h"
+#include "Greis/MySqlSource.h"
 
-using namespace ProjectBase;
+using namespace Common;
 using namespace Greis;
 //namespace po = boost::program_options;
 
@@ -123,7 +123,7 @@ void parseArguments(const QCoreApplication& a, QString& database, QString& outFi
 
     if (args.count() < fixedValuesCount + 1)
     {
-        std::cout << usageStr.toAscii().data() << std::endl;
+        std::cout << usageStr.toLatin1().data() << std::endl;
         throw Exception();
     }
 
@@ -189,10 +189,7 @@ int main(int argc, char **argv)
         QCoreApplication a(argc, argv);
 
         QTextCodec* codec = QTextCodec::codecForName("UTF-8");
-        QTextCodec* codecMs = QTextCodec::codecForName("Windows-1251");
-        QTextCodec::setCodecForCStrings(codecMs);
         QTextCodec::setCodecForLocale(codec);
-        QTextCodec::setCodecForTr(codec);
 
         sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));

@@ -2,13 +2,13 @@
 #include <clocale>
 #include <locale>
 #include <iostream>
-#include "ProjectBase/Logger.h"
-#include "ProjectBase/Path.h"
-#include "ProjectBase/Connection.h"
-#include "DataChunk.h"
-#include "MySqlSink.h"
+#include "Common/Logger.h"
+#include "Common/Path.h"
+#include "Common/Connection.h"
+#include "Greis/DataChunk.h"
+#include "Greis/MySqlSink.h"
 
-using namespace ProjectBase;
+using namespace Common;
 using namespace Greis;
 
 void applyArguments(QStringList& args, Connection* connection)
@@ -96,16 +96,13 @@ int main(int argc, char **argv)
         QCoreApplication a(argc, argv);
 
         QTextCodec* codec = QTextCodec::codecForName("UTF-8");
-        QTextCodec* codecMs = QTextCodec::codecForName("Windows-1251");
-        QTextCodec::setCodecForCStrings(codecMs);
         QTextCodec::setCodecForLocale(codec);
-        QTextCodec::setCodecForTr(codec);
 
         sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
         
         auto args = a.arguments();        
-		if (args.size() == 2 && args[1] == "--help" || args[1] == "-h" || args.size() == 1)
+        if (args.size() == 2 && args[1] == "--help" || args[1] == "-h" || args.size() == 1)
         {
             
             auto usageStr = QString("Usage: 'JpsToDatabase.exe [--database databaseName] [--username userName] [--password password] [--port port] [--host hostName] <input-filename> [<other-input-filenames>]\r\n") + 
