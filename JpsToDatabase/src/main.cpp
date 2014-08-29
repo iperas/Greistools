@@ -114,8 +114,6 @@ int main(int argc, char **argv)
             return 10022;
         }
         args.pop_front();
-    
-
 
         // Connecting to database
         wrapIntoTransaction = sIniSettings.value("WrapIntoTransaction", false).toBool();
