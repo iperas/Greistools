@@ -90,16 +90,13 @@ int main(int argc, char **argv)
     Connection::SharedPtr_t connection;
     try
     {
-        std::setlocale(LC_ALL, "Russian_Russia.1251");
-        std::locale::global(std::locale("Russian_Russia.1251"));
-
         QCoreApplication a(argc, argv);
 
         QTextCodec* codec = QTextCodec::codecForName("UTF-8");
         QTextCodec::setCodecForLocale(codec);
 
-        sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
         sIniSettings.Initialize(Path::Combine(Path::ApplicationDirPath(), "config.ini"));
+        sLogger.Initialize(sIniSettings.value("LogLevel", 5).toInt());
         
         auto args = a.arguments();        
         if (args.size() == 2 && args[1] == "--help" || args[1] == "-h" || args.size() == 1)
@@ -118,7 +115,7 @@ int main(int argc, char **argv)
         // Connecting to database
         wrapIntoTransaction = sIniSettings.value("WrapIntoTransaction", false).toBool();
         int inserterBatchSize = sIniSettings.value("inserterBatchSize", 10000).toInt();
-        connection = Connection::FromSettings("Db");
+        connection = Connection::FromSettings("LocalDatabase");
         applyArguments(args, connection.get());
         connection->Connect();
         
