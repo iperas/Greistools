@@ -193,7 +193,7 @@ int main(int argc, char **argv)
                 connection->Database().transaction();
             }
             {
-                auto sink = make_unique<MySqlSink>(connection.get(), inserterBatchSize);
+                auto sink = make_unique<MySqlSink>(connection, inserterBatchSize);
                 sink->AddJpsFile(file.get());
                 sink->Flush();
             }

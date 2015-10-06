@@ -205,7 +205,7 @@ int main(int argc, char **argv)
         sLogger.Info(QString("Connecting to `%1`...").arg(connection->DatabaseName));
         connection->Connect();
 
-        auto mySqlSource = make_unique<MySqlSource>(connection.get());
+        auto mySqlSource = make_unique<MySqlSource>(connection);
 
         sLogger.Info("Done!");
         sLogger.Info(QString("Reading data for range [`%1`, `%2`] (%3 - %4)...")
