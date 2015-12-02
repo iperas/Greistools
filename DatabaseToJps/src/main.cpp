@@ -183,9 +183,6 @@ int main(int argc, char **argv)
 {
     try
     {
-        std::setlocale(LC_ALL, "ru_RU.utf8");
-        //std::locale::global(std::locale("ru_RU.utf8"));
-
         QCoreApplication a(argc, argv);
 
         QTextCodec* codec = QTextCodec::codecForName("UTF-8");
