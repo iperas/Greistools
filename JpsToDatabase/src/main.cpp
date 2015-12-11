@@ -1,12 +1,10 @@
-#include <QtCore/QtCore>
-#include <clocale>
-#include <locale>
 #include <iostream>
 #include "Common/Logger.h"
 #include "Common/Path.h"
 #include "Common/Connection.h"
 #include "Greis/DataChunk.h"
 #include "Greis/MySqlSink.h"
+#include <Greis/FileBinaryStream.h>
 
 using namespace Common;
 using namespace Greis;
@@ -114,6 +112,7 @@ int main(int argc, char **argv)
 
         // Connecting to database
         wrapIntoTransaction = sIniSettings.value("WrapIntoTransaction", false).toBool();
+        bool skipInvalid = sIniSettings.value("skipInvalid", false).toBool();
         int inserterBatchSize = sIniSettings.value("inserterBatchSize", 10000).toInt();
         connection = Connection::FromSettings("LocalDatabase");
         applyArguments(args, connection.get());
@@ -184,7 +183,9 @@ int main(int argc, char **argv)
                 DatabaseHelper::ThrowIfError(query);*/
 
             sLogger.Info(QString("Reading file `%1`...").arg(filename));
-            auto file = DataChunk::FromFile(filename);
+            auto file = make_unique<DataChunk>();
+            GreisMessageStream stream(std::make_shared<FileBinaryStream>(filename), skipInvalid);
+            file->ReadHead(stream);
 
             sLogger.Info(QString("Writing data into database `%1`...").arg(connection->DatabaseName));
             if (wrapIntoTransaction)
@@ -194,7 +195,20 @@ int main(int argc, char **argv)
             }
             {
                 auto sink = make_unique<MySqlSink>(connection, inserterBatchSize);
-                sink->AddJpsFile(file.get());
+                
+                // Data reading loop
+                bool hasMore;
+                do
+                {
+                    // Reading another portion of data and writing it into db
+                    hasMore = file->ReadBody(stream, 1000);
+                    for (auto& epoch : file->Body())
+                    {
+                        sink->AddEpoch(epoch.get());
+                    }
+                    file->Body().clear();
+                } while (hasMore);
+
                 sink->Flush();
             }
             if (wrapIntoTransaction)
