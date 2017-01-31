@@ -3,18 +3,36 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 # Common settings
 
 CMAKE_POLICY(SET CMP0003 NEW)
+CMAKE_POLICY(SET CMP0054 NEW)
 
-MACRO(add_test_ex target)
-    ADD_TEST(NAME ${target} COMMAND $<TARGET_FILE:${target}> --gtest_output=xml:${CMAKE_BINARY_DIR}/build/test-reports/${target}.xml)
-ENDMACRO()
+# Get all propreties that cmake supports
+execute_process(COMMAND cmake --help-property-list OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)
 
-SET(TEXT_TRANSFORM "C:/Program Files (x86)/Common Files/Microsoft Shared/TextTemplating/12.0/TextTransform.exe")
+# Convert command output into a CMake list
+STRING(REGEX REPLACE ";" "\\\\;" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}")
+STRING(REGEX REPLACE "\n" ";" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}")
 
-MACRO(add_custom_action_t4 targets)
-	foreach(target ${targets})
-    	add_custom_command(TARGET ${PROJECT} PRE_BUILD COMMAND ${TEXT_TRANSFORM} -I "${CMAKE_CURRENT_SOURCE_DIR}" -out "${CMAKE_CURRENT_SOURCE_DIR}/${target}" "${CMAKE_CURRENT_SOURCE_DIR}/${target}.tt")
-    endforeach()
-ENDMACRO()
+function(print_properties)
+    message ("CMAKE_PROPERTY_LIST = ${CMAKE_PROPERTY_LIST}")
+endfunction(print_properties)
+
+function(print_target_properties tgt)
+    if(NOT TARGET ${tgt})
+      message("There is no target named '${tgt}'")
+      return()
+    endif()
+
+    foreach (prop ${CMAKE_PROPERTY_LIST})
+        string(REPLACE "<CONFIG>" "${CMAKE_BUILD_TYPE}" prop ${prop})
+        # message ("Checking ${prop}")
+        get_property(propval TARGET ${tgt} PROPERTY ${prop} SET)
+        if (propval)
+            get_target_property(propval ${tgt} ${prop})
+            message ("${tgt} ${prop} = ${propval}")
+        endif()
+    endforeach(prop)
+endfunction(print_target_properties)
+
 
 MACRO(add_custom_action_copy targets)
 	foreach(File ${targets})
@@ -24,9 +42,10 @@ MACRO(add_custom_action_copy targets)
 	endforeach()
 ENDMACRO()
 
-# Project settings
-
-PROJECT(jpsutils CXX)
+MACRO(add_test_ex target)
+    ADD_TEST(NAME ${target} COMMAND $<TARGET_FILE:${target}> --gtest_output=xml:
+${CMAKE_BINARY_DIR}/build/test-reports/${target}.xml)
+ENDMACRO()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -35,10 +54,6 @@ endif()
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/bin)
-
-if (CMAKE_COMPILER_IS_GNUCXX)
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-endif()
 
 # Add some multithreaded build support
 MARK_AS_ADVANCED(MULTITHREADED_BUILD)
@@ -59,7 +74,6 @@ endif()
 ## Qt
 
 # (Make sure that CMAKE_PREFIX_PATH env var is set)
-#set(CMAKE_AUTOMOC ON)
 FIND_PACKAGE(Qt5Core)
 FIND_PACKAGE(Qt5Sql)
 
@@ -71,26 +85,53 @@ FIND_PACKAGE(Boost COMPONENTS regex system thread REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
 
-## GTest
+# Common
 
-INCLUDE(CMakeGTest.txt)
+include(ExternalProject)
+set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/ThirdParty)
 
-# Sub projects
+ExternalProject_Add (
+ libCommon
+ GIT_REPOSITORY "https://stash.ifz.ru/scm/omni/common.git"
+ GIT_TAG "master"
+ UPDATE_COMMAND ""
+ INSTALL_COMMAND ""
+ BUILD_IN_SOURCE 1
+)
+ExternalProject_Get_Property(libCommon source_dir)
+SET(Common_source_dir ${source_dir})
+add_library( Common STATIC IMPORTED )
+if (UNIX)
+    SET(pathCommon ${Common_source_dir}/build/lib/libCommon.a)
+endif (UNIX)
+if (WIN32)
+    SET(pathCommon ${Common_source_dir}/build/lib/Common.lib)   
+endif (WIN32)
+set_target_properties( Common PROPERTIES IMPORTED_LOCATION ${pathCommon} )
+add_dependencies( Common libCommon )
 
-add_subdirectory(Common)
-add_subdirectory(Common.Tests)
-add_subdirectory(Greis)
-add_subdirectory(Greis.Tests)
-add_subdirectory(Platform)
-add_subdirectory(Platform.Tests)
-add_subdirectory(DatabaseToJps)
-add_subdirectory(JpsToDatabase)
-add_subdirectory(jpslogd)
+ExternalProject_Add (
+ libGreis
+ GIT_REPOSITORY "https://stash.ifz.ru/scm/omni/greis.git"
+ GIT_TAG "master"
+ UPDATE_COMMAND ""
+ INSTALL_COMMAND ""
+ BUILD_IN_SOURCE 1
+)
+ExternalProject_Get_Property(libGreis source_dir)
+SET(Greis_source_dir ${source_dir})
+add_library( Greis STATIC IMPORTED )
+if (UNIX)
+    SET(pathGreis ${Greis_source_dir}/build/lib/libGreis.a)
+endif (UNIX)
+if (WIN32)
+    SET(pathCommon ${Greis_source_dir}/build/lib/Greis.lib)
+endif (WIN32)
+set_target_properties( Greis PROPERTIES IMPORTED_LOCATION ${pathGreis} )
+add_dependencies( Greis libGreis )
 
-# Tests
+add_subdirectory(jps2db)
+add_subdirectory(db2jps)
+add_subdirectory(jps2jps)
+add_subdirectory(jpsdump)
 
-ENABLE_TESTING()
-
-ADD_TEST_EX(Common.Tests)
-ADD_TEST_EX(Greis.Tests)
-ADD_TEST_EX(Platform.Tests)
