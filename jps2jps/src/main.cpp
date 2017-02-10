@@ -40,7 +40,7 @@ using namespace Greis;
                 QRegExp rxX("^-X$|--debug");
                 QRegExp rxAccurate("^-A$|--accurate");
                 QRegExp rxT("^-t$|--thorough");
-                QRegExp rxOut("^-o[=]{0,1}[A-Za-z\\.0-9\\-\\_\\!\\~]+$|--output[=]{0,1}[A-Za-z\\.0-9\\-\\_\\!\\~]+");
+                QRegExp rxOut("^(-o|--output)[=]{0,1}([A-Za-z\\.0-9\\-\\_\\!\\~]+)");
 
                 QDateTime startTime = QDateTime();
                 QDateTime stopTime = QDateTime();
@@ -76,7 +76,7 @@ using namespace Greis;
                     }
                     else if (rxOut.indexIn(args.at(i)) != -1)
                     {
-                        outFileName = rxOut.cap(1);
+                        outFileName = rxOut.cap(2);
                     }
                     else if (rxAccurate.indexIn(args.at(i)) != -1)
                     {
@@ -88,6 +88,7 @@ using namespace Greis;
 
 
                 sLogger.Info(QString("Processing file %1").arg(inFileName));
+                sLogger.Info(QString("Output file %1").arg(outFileName));
                 if(startTime.isValid())sLogger.Info(QString("Windowing start: %1").arg(startTime.toString(Qt::ISODate))); else startTime = QDateTime::fromMSecsSinceEpoch(0);
                 if(stopTime.isValid())sLogger.Info(QString("Windowing stop: %1").arg(stopTime.toString(Qt::ISODate))); else stopTime = QDateTime::fromMSecsSinceEpoch(932838457459459);
                 
@@ -125,27 +126,32 @@ using namespace Greis;
                     hasMore = file->ReadBody(stream, 1000);
                     for (auto& epoch : file->Body())
                     {
+                        bool hasRD = false, hasSI = false, hasNN = false;
                         if (startTime <= epoch->DateTime && epoch->DateTime <= stopTime)
                         {
                             sLogger.Trace(QString("Processing epoch %1").arg(epoch->DateTime.toString(Qt::ISODate)));
-                            if(epochCounter==0 && accurateMode)
-                                {
-                                    bool hasRD = false, hasSI = false, hasNN = false;
-                                    for (auto& msg : epoch->Messages)
-                                        {
-                                            auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
-                                            if(id=="SI")hasSI = true;
-                                            if(id=="NN")hasNN = true;
-                                            if(id=="RD")hasRD = true;
-                                        }
-                                    if(!hasRD)target->AddMessage(std::move(lastRcvDateStdMessage));
-                                    if(!hasNN)target->AddMessage(std::move(lastSatNumbersStdMessage));
-                                    if(!hasSI)target->AddMessage(std::move(lastSatIndexStdMessage));
+                            if(epochCounter==0 && accurateMode){
+                                for (auto& msg : epoch->Messages){
+                                    auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
+                                    if(id=="SI")hasSI = true;
+                                    if(id=="NN")hasNN = true;
+                                    if(id=="RD")hasRD = true;
                                 }
-                            for (auto& msg : epoch->Messages)
+                            }
+                            if(epochCounter==0 && accurateMode){
+                                for (auto& msg : epoch->Messages)
                                 {
                                     target->AddMessage(std::move(msg));
+                                    if(!hasRD && epochCounter == 0)target->AddMessage(std::move(lastRcvDateStdMessage));
+                                    if(!hasNN && epochCounter == 0)target->AddMessage(std::move(lastSatNumbersStdMessage));
+                                    if(!hasSI && epochCounter == 0)target->AddMessage(std::move(lastSatIndexStdMessage));
                                 }
+                            }   else {
+                                for (auto& msg : epoch->Messages)
+                                {
+                                    target->AddMessage(std::move(msg));
+                                }   
+                            }
                             epochCounter++;
                         } else {
                             sLogger.Trace(QString("Skipping epoch %1").arg(epoch->DateTime.toString(Qt::ISODate)));
