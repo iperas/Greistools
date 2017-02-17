@@ -92,7 +92,7 @@ set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/ThirdParty)
 
 ExternalProject_Add (
  libCommon
- GIT_REPOSITORY "https://stash.ifz.ru/scm/omni/common.git"
+ GIT_REPOSITORY "https://github.com/iperas/Common"
  GIT_TAG "master"
  UPDATE_COMMAND ""
  INSTALL_COMMAND ""
@@ -112,7 +112,7 @@ add_dependencies( Common libCommon )
 
 ExternalProject_Add (
  libGreis
- GIT_REPOSITORY "https://stash.ifz.ru/scm/omni/greis.git"
+ GIT_REPOSITORY "https://github.com/iperas/Greis"
  GIT_TAG "master"
  UPDATE_COMMAND ""
  INSTALL_COMMAND ""

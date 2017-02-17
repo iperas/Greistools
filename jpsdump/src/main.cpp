@@ -8,6 +8,8 @@
 #include "Greis/DataChunk.h"
 #include "Greis/FileBinaryStream.h"
 #include "Greis/ChecksumComputer.h"
+#include "Greis/StdMessage/RcvDateStdMessage.h"
+#include "Greis/StdMessage/EpochTimeStdMessage.h"
 #include "Greis/StdMessage/FileIdStdMessage.h"
 #include "Greis/StdMessage/MsgFmtStdMessage.h"
 #include "Greis/StdMessage/ParamsStdMessage.h"
@@ -102,10 +104,24 @@ using namespace Greis;
                             sLogger.Info(QString("Processing epoch %1").arg(epoch->DateTime.toString(Qt::ISODate)));
                                     for (auto& msg : epoch->Messages)
                                         {
+                                            auto sMsg = static_cast<Greis::StdMessage*>(msg.get());
+                                            std::cout << QString("[%1]").arg(sMsg->Id().c_str()).toStdString();
                                             if(verboseMode){
-
-                                            } else {
-                                                std::cout << QString("[%1]").arg(static_cast<Greis::StdMessage*>(msg.get())->Id().c_str()).toStdString();
+                                                if(sMsg->Id()=="~~")
+                                                {
+                                                    auto eTMsg = static_cast<Greis::EpochTimeStdMessage*>(msg.get());
+                                                    std::cout << QString(":{Tod: %1 ms, Cs: %2, isCorrect: %3}").arg(eTMsg->Tod()).arg(eTMsg->Cs()).arg(eTMsg->IsCorrect()).toStdString();
+                                                }
+                                                else if(sMsg->Id()=="RD")
+                                                {
+                                                    auto rDMsg = static_cast<Greis::RcvDateStdMessage*>(msg.get());
+                                                    std::cout << QString(":{Year: %1, Month: %2, Day: %3, Base: %4, Cs: %5, isCorrect: %6}").arg(rDMsg->Year()).arg(rDMsg->Month()).arg(rDMsg->Day()).arg(rDMsg->Base()).arg(rDMsg->Cs()).arg(rDMsg->IsCorrect()).toStdString();
+                                                }
+                                                else 
+                                                {
+                                                    std::cout << QString(":{Size: %1, isCorrect: %2}").arg(sMsg->Size()).arg(sMsg->IsCorrect()).toStdString();
+                                                }
+                                                std::cout << std::endl;
                                             }
                                         }
                                         std::cout << std::endl;

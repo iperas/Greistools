@@ -18,6 +18,11 @@
 using namespace Common;
 using namespace Greis;
 
+    void insertCRLF(DataChunk * dataChunk)
+    {
+        dataChunk->AddMessage(NonStdTextMessage::CreateCarriageReturnMessage());
+        dataChunk->AddMessage(NonStdTextMessage::CreateNewLineMessage());
+    }
 
     int main(int argc, char** argv)
     {
@@ -40,6 +45,7 @@ using namespace Greis;
                 QRegExp rxX("^-X$|--debug");
                 QRegExp rxAccurate("^-A$|--accurate");
                 QRegExp rxT("^-t$|--thorough");
+                QRegExp rxCRLF("^--crlf");
                 QRegExp rxOut("^(-o|--output)[=]{0,1}([A-Za-z\\.0-9\\-\\_\\!\\~]+)");
 
                 QDateTime startTime = QDateTime();
@@ -48,6 +54,7 @@ using namespace Greis;
                 QString inFileName, outFileName;
                 bool thoroughMode = false;
                 bool accurateMode = false;
+                bool crlfMode = false;
 
                 if(rxIn.indexIn(args.at(args.size()-1)) != -1){
                     inFileName=rxIn.cap(1);
@@ -82,6 +89,10 @@ using namespace Greis;
                     {
                         accurateMode = true;
                     }
+                    else if (rxCRLF.indexIn(args.at(i)) != -1)
+                    {
+                        crlfMode = true;
+                    }
                 }
 
                 if(outFileName.isEmpty())outFileName=QString("%1-%2").arg(QTime::currentTime().toString("HHmm")).arg(inFileName);
@@ -108,18 +119,15 @@ using namespace Greis;
                 auto msgPMVer = make_unique<Greis::ParamsStdMessage>(bMsgPMVer,bMsgPMVer.size());
 
                 target->AddMessage(std::move(fileId));
-                target->AddMessage(NonStdTextMessage::CreateCarriageReturnMessage());
-                target->AddMessage(NonStdTextMessage::CreateNewLineMessage());
+                insertCRLF(target.get());
                 target->AddMessage(std::move(msgFmt));
-                target->AddMessage(NonStdTextMessage::CreateCarriageReturnMessage());
-                target->AddMessage(NonStdTextMessage::CreateNewLineMessage());
+                insertCRLF(target.get());
                 target->AddMessage(std::move(msgPMVer));
-                target->AddMessage(NonStdTextMessage::CreateCarriageReturnMessage());
-                target->AddMessage(NonStdTextMessage::CreateNewLineMessage());
+                insertCRLF(target.get());
 
-                Greis::SatIndexStdMessage::UniquePtr_t lastSatIndexStdMessage;
-                Greis::SatNumbersStdMessage::UniquePtr_t lastSatNumbersStdMessage;
-                Greis::RcvDateStdMessage::UniquePtr_t lastRcvDateStdMessage;
+                Greis::SatIndexStdMessage::UniquePtr_t lastSatIndexStdMessage; bool savedSI = false;
+                Greis::SatNumbersStdMessage::UniquePtr_t lastSatNumbersStdMessage; bool savedNN = false;
+                Greis::RcvDateStdMessage::UniquePtr_t lastRcvDateStdMessage; bool savedRD = false;
 
                 do
                 {
@@ -133,23 +141,40 @@ using namespace Greis;
                             if(epochCounter==0 && accurateMode){
                                 for (auto& msg : epoch->Messages){
                                     auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
-                                    if(id=="SI")hasSI = true;
-                                    if(id=="NN")hasNN = true;
-                                    if(id=="RD")hasRD = true;
+                                    if(id=="SI"){hasSI = true; sLogger.Trace(QString("First epoch of interest already has [SI]"));}
+                                    if(id=="NN"){hasNN = true; sLogger.Trace(QString("First epoch of interest already has [NN]"));}
+                                    if(id=="RD"){hasRD = true; sLogger.Trace(QString("First epoch of interest already has [RD]"));}
                                 }
                             }
                             if(epochCounter==0 && accurateMode){
                                 for (auto& msg : epoch->Messages)
                                 {
+                                    auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
                                     target->AddMessage(std::move(msg));
-                                    if(!hasRD && epochCounter == 0)target->AddMessage(std::move(lastRcvDateStdMessage));
-                                    if(!hasNN && epochCounter == 0)target->AddMessage(std::move(lastSatNumbersStdMessage));
-                                    if(!hasSI && epochCounter == 0)target->AddMessage(std::move(lastSatIndexStdMessage));
+                                    if(crlfMode)insertCRLF(target.get());
+                                    if(id=="~~"){
+                                        if(!hasRD && savedRD){
+                                            sLogger.Trace(QString("Injecting [RD]..."));
+                                            target->AddMessage(std::move(lastRcvDateStdMessage));
+                                            if(crlfMode)insertCRLF(target.get());
+                                            }
+                                        if(!hasSI && savedSI){
+                                            sLogger.Trace(QString("Injecting [SI]..."));
+                                            target->AddMessage(std::move(lastSatIndexStdMessage));
+                                            if(crlfMode)insertCRLF(target.get());
+                                        }
+                                        if(!hasNN && savedNN){
+                                            sLogger.Trace(QString("Injecting [NN]..."));
+                                            target->AddMessage(std::move(lastSatNumbersStdMessage));
+                                            if(crlfMode)insertCRLF(target.get());
+                                        }
+                                    }
                                 }
                             }   else {
                                 for (auto& msg : epoch->Messages)
                                 {
                                     target->AddMessage(std::move(msg));
+                                    insertCRLF(target.get());
                                 }   
                             }
                             epochCounter++;
@@ -163,12 +188,15 @@ using namespace Greis;
                                                     auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
                                                     if(id=="SI"){
                                                         lastSatIndexStdMessage=make_unique<SatIndexStdMessage>(msg->ToByteArray(),msg->Size());
+                                                        savedSI = true;
                                                     }
                                                     if(id=="NN"){
                                                         lastSatNumbersStdMessage=make_unique<SatNumbersStdMessage>(msg->ToByteArray(),msg->Size());
+                                                        savedNN = true;
                                                     }
                                                     if(id=="RD"){
                                                         lastRcvDateStdMessage=make_unique<RcvDateStdMessage>(msg->ToByteArray(),msg->Size());
+                                                        savedRD = true;
                                                     }
 
                                                 }
