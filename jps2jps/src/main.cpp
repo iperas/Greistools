@@ -112,10 +112,10 @@ using namespace Greis;
                 const int FileIdStdMessageFixedSize = 90;
                 const int MsgFmtStdMessageFixedSize = 14;
 
-                auto fileId = make_unique<Greis::FileIdStdMessage>(QString("JP055RLOGFJPS GREISTOOLS Receiver log-file").leftJustified(FileIdStdMessageFixedSize,' ').toLatin1().constData(),FileIdStdMessageFixedSize);
+                auto fileId = make_unique<Greis::FileIdStdMessage>(QString("JP055RLOGF JPS GREISTOOLS Receiver Log File").leftJustified(FileIdStdMessageFixedSize,' ').toLatin1().constData(),FileIdStdMessageFixedSize);
                 auto msgFmt = make_unique<Greis::MsgFmtStdMessage>("MF009JP010109F", MsgFmtStdMessageFixedSize);
-                QByteArray bMsgPMVer = QString("PM024rcv/ver/main=\"2.7.0 Mar,31,2008\",@").toLatin1().constData();
-                bMsgPMVer.append(QString::number(Greis::ChecksumComputer::ComputeCs8(bMsgPMVer,bMsgPMVer.size()), 16).toLatin1().constData());
+                QByteArray bMsgPMVer = QString("PM024rcv/ver/main=\"3.4.1 Mar,13,2012\",@").toLatin1().constData();
+                bMsgPMVer.append(QString("%1").arg(Greis::ChecksumComputer::ComputeCs8(bMsgPMVer,bMsgPMVer.size()), 2, 16, QChar('0')).toUpper().toLatin1().constData());
                 auto msgPMVer = make_unique<Greis::ParamsStdMessage>(bMsgPMVer,bMsgPMVer.size());
 
                 target->AddMessage(std::move(fileId));
