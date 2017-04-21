@@ -6,6 +6,7 @@
 #include "Common/Path.h"
 #include "Common/Connection.h"
 #include "Greis/DataChunk.h"
+#include "Greis/SkyPeek.h"
 #include "Greis/FileBinaryStream.h"
 #include "Greis/ChecksumComputer.h"
 #include "Greis/StdMessage/RcvDateStdMessage.h"
@@ -38,6 +39,7 @@ using namespace Greis;
                 QRegExp rxIn("([A-Za-z\\.0-9\\-\\_\\!\\~]+)");
                 QRegExp rxX("^-X$|--debug");
                 QRegExp rxV("^-v$|--verbose");
+                QRegExp rxS("^--skypeek");
                 QRegExp rxStat("^-s$|--statistics");
                 QRegExp rxT("^-t$|--thorough");
 
@@ -48,6 +50,7 @@ using namespace Greis;
                 bool thoroughMode = false;
                 bool verboseMode = false;
                 bool showStatistics = false;
+                bool skyPeekMode = false;
 
                 if(rxIn.indexIn(args.at(args.size()-1)) != -1){
                     inFileName=rxIn.cap(1);
@@ -77,6 +80,10 @@ using namespace Greis;
                     else if (rxStat.indexIn(args.at(i)) != -1)
                     {
                         showStatistics = true;
+                    } 
+                    else if (rxS.indexIn(args.at(i)) != -1)
+                    {
+                        skyPeekMode = true;
                     }
                     else if (rxT.indexIn(args.at(i)) != -1)
                     {
@@ -88,6 +95,7 @@ using namespace Greis;
                 if(startTime.isValid())sLogger.Info(QString("Windowing start: %1").arg(startTime.toString(Qt::ISODate))); else startTime = QDateTime::fromMSecsSinceEpoch(0);
                 if(stopTime.isValid())sLogger.Info(QString("Windowing stop: %1").arg(stopTime.toString(Qt::ISODate))); else stopTime = QDateTime::fromMSecsSinceEpoch(932838457459459);
                 
+                auto skyPeek = make_unique<SkyPeek>();
                 auto file = make_unique<DataChunk>();
                 auto target = make_unique<DataChunk>();
                 GreisMessageStream stream(std::make_shared<FileBinaryStream>(inFileName), true);
@@ -101,11 +109,16 @@ using namespace Greis;
                     {
                         if (startTime <= epoch->DateTime && epoch->DateTime <= stopTime)
                         {
-                            sLogger.Info(QString("Processing epoch %1").arg(epoch->DateTime.toString(Qt::ISODate)));
+                             std::cout << QString("Epoch %1:{").arg(epoch->DateTime.toString(Qt::ISODate)).toStdString();
                                     for (auto& msg : epoch->Messages)
                                         {
                                             auto sMsg = static_cast<Greis::StdMessage*>(msg.get());
                                             std::cout << QString("[%1]").arg(sMsg->Id().c_str()).toStdString();
+
+                                            if(skyPeekMode){
+                                                skyPeek->AddMessage(msg.get());
+                                            }
+
                                             if(verboseMode){
                                                 if(sMsg->Id()=="~~")
                                                 {
@@ -124,7 +137,26 @@ using namespace Greis;
                                                 std::cout << std::endl;
                                             }
                                         }
-                                        std::cout << std::endl;
+                            std::cout << "}";
+                            std::cout << std::endl;
+                            if(skyPeekMode){
+                                std::cout << QString("SkyPeek:{").toStdString();
+                                std::cout << std::endl;
+                                for (int i=0;i< skyPeek->SVs.size(); i++)
+                                {
+                                    SkyPeek::SV SV = skyPeek->SVs[i];
+                                    std::cout << QString("%1:{").arg(SV.USI).toStdString();
+                                    std::cout << QString("PR: {CA/L1: %2, P/L1: %3, ").arg(SV.PseudorangeC1).arg(SV.Pseudorange1).toStdString();
+                                    std::cout << QString("P/L2: %1, CA/L2: %2, P/L5: %3}, ").arg(SV.Pseudorange2).arg(SV.PseudorangeC2).arg(SV.Pseudorange5).toStdString();
+                                    std::cout << QString("CP:{CA/L1: %1, P/L1: %2, P/L2: %3, ").arg(SV.CarrierPhaseC1).arg(SV.CarrierPhase1).arg(SV.CarrierPhase2).toStdString();
+                                    std::cout << QString("CP CA/L2: %1, CP P/L5: %2}, ").arg(SV.CarrierPhaseC2).arg(SV.CarrierPhase5).toStdString();
+                                    std::cout << QString("AZ: %2, EL: %1},").arg(SV.Elevation).arg(SV.Azimuth).toStdString();
+                                    std::cout << std::endl;
+                                }
+                                
+                                std::cout << QString("}").toStdString();
+                                std::cout << std::endl;
+                            }
                             epochCounter++;
                         } else {
                            sLogger.Trace(QString("Skipping epoch %1").arg(epoch->DateTime.toString(Qt::ISODate)));
