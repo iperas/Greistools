@@ -46,7 +46,7 @@ using namespace Greis;
                 QRegExp rxAccurate("^-A$|--accurate");
                 QRegExp rxT("^-t$|--thorough");
                 QRegExp rxCRLF("^--crlf");
-                QRegExp rxOut("^(-o|--output)[=]{0,1}([A-Za-z\\.0-9\\-\\_\\!\\~]+)");
+                QRegExp rxOut("(?:--output|-O)[=]{0,1}([/A-Za-z\\.0-9\\-\\_\\!\\~]+)");
 
                 QDateTime startTime = QDateTime();
                 QDateTime stopTime = QDateTime();
@@ -83,7 +83,7 @@ using namespace Greis;
                     }
                     else if (rxOut.indexIn(args.at(i)) != -1)
                     {
-                        outFileName = rxOut.cap(2);
+                        outFileName = rxOut.cap(1);
                     }
                     else if (rxAccurate.indexIn(args.at(i)) != -1)
                     {
