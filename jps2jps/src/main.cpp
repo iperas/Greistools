@@ -129,6 +129,7 @@ using namespace Greis;
                 Greis::SatNumbersStdMessage::UniquePtr_t lastSatNumbersStdMessage; bool savedNN = false;
                 Greis::RcvDateStdMessage::UniquePtr_t lastRcvDateStdMessage; bool savedRD = false;
 
+                auto out = File::CreateBinary(outFileName);
                 do
                 {
                     hasMore = file->ReadBody(stream, 1000);
@@ -205,11 +206,24 @@ using namespace Greis;
                             if(!thoroughMode && epochCounter!=0){hasMore=false; break;}
                         }
                     }
+                    auto ba = QByteArray();
+                    if (out->pos() == 0){
+                        sLogger.Trace(QString("Writing header and data..."));
+                        ba = target->ToByteArray();
+                    } else {
+                        sLogger.Trace(QString("Writing data..."));
+                        for (const auto& targetepoch : target->Body())
+                        {
+                            for (const auto& targetmsg : targetepoch->Messages)
+                            {
+                                ba.append(targetmsg->ToByteArray());
+                            }
+                        }
+                    }
+                    out->write(ba);
+                    target->Body().clear();
                     file->Body().clear();
                 } while (hasMore);
-                auto ba = target->ToByteArray();
-                auto out = File::CreateBinary(outFileName);
-                out->write(ba);
                 out->close();
                 return 0;
             }
