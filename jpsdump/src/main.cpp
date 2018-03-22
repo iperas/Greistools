@@ -2,18 +2,18 @@
 #include <clocale>
 #include <locale>
 #include <iostream>
-#include "Common/Logger.h"
-#include "Common/Path.h"
-#include "Common/Connection.h"
-#include "Greis/DataChunk.h"
-#include "Greis/SkyPeek.h"
-#include "Greis/FileBinaryStream.h"
-#include "Greis/ChecksumComputer.h"
-#include "Greis/StdMessage/RcvDateStdMessage.h"
-#include "Greis/StdMessage/EpochTimeStdMessage.h"
-#include "Greis/StdMessage/FileIdStdMessage.h"
-#include "Greis/StdMessage/MsgFmtStdMessage.h"
-#include "Greis/StdMessage/ParamsStdMessage.h"
+#include "common/Logger.h"
+#include "common/Path.h"
+#include "common/Connection.h"
+#include "greis/DataChunk.h"
+#include "extras/SkyPeek.h"
+#include "greis/FileBinaryStream.h"
+#include "greis/ChecksumComputer.h"
+#include "greis/StdMessage/RcvDateStdMessage.h"
+#include "greis/StdMessage/EpochTimeStdMessage.h"
+#include "greis/StdMessage/FileIdStdMessage.h"
+#include "greis/StdMessage/MsgFmtStdMessage.h"
+#include "greis/StdMessage/ParamsStdMessage.h"
 
 using namespace Common;
 using namespace Greis;
@@ -29,7 +29,7 @@ using namespace Greis;
                 int LogLevel = 3;
                 sLogger.Initialize(LogLevel);
 
-                sLogger.Info("greistools\\jpsdump data examination component");
+                sLogger.Info("Greistools\\jpsdump data examination component");
                 sLogger.Info("Schmidt Institute of Physics of the Earth RAS");
                 sLogger.Info("PROVIDED AS IS, NO WARRANTY, FOR SCIENTIFIC USE");
 
@@ -145,11 +145,12 @@ using namespace Greis;
                                 for (int i=0;i< skyPeek->SVs.size(); i++)
                                 {
                                     SkyPeek::SV SV = skyPeek->SVs[i];
-                                    std::cout << QString("%1:{").arg(SV.USI).toStdString();
-                                    std::cout << QString("PR: {CA/L1: %2, P/L1: %3, ").arg(SV.PseudorangeC1).arg(SV.Pseudorange1).toStdString();
-                                    std::cout << QString("P/L2: %1, CA/L2: %2, P/L5: %3}, ").arg(SV.Pseudorange2).arg(SV.PseudorangeC2).arg(SV.Pseudorange5).toStdString();
-                                    std::cout << QString("CP:{CA/L1: %1, P/L1: %2, P/L2: %3, ").arg(SV.CarrierPhaseC1).arg(SV.CarrierPhase1).arg(SV.CarrierPhase2).toStdString();
-                                    std::cout << QString("CP CA/L2: %1, CP P/L5: %2}, ").arg(SV.CarrierPhaseC2).arg(SV.CarrierPhase5).toStdString();
+                                    std::cout << QString("{SSID: %1, SVID: %2, USI: %3}:{").arg(SV.ESI.SSID).arg(SV.ESI.SVID).arg(SV.USI).toStdString();
+                                    std::cout << QString("Asys: %1, Ksys: %2, ").arg(SV.Asys).arg(SV.Ksys).toStdString();
+                                    std::cout << QString("PR: {CA/L1: %2, P/L1: %3, ").arg(SV.Pseudorange[SkyPeek::Signals::caL1]).arg(SV.Pseudorange[SkyPeek::Signals::pL1]).toStdString();
+                                    std::cout << QString("P/L2: %1, CA/L2: %2, P/L5: %3}, ").arg(SV.Pseudorange[SkyPeek::Signals::pL2]).arg(SV.Pseudorange[SkyPeek::Signals::caL2]).arg(SV.Pseudorange[SkyPeek::Signals::L5]).toStdString();
+                                    std::cout << QString("CP:{CA/L1: %1, P/L1: %2, P/L2: %3, ").arg(SV.CarrierPhase[SkyPeek::Signals::caL1]).arg(SV.CarrierPhase[SkyPeek::Signals::pL1]).arg(SV.CarrierPhase[SkyPeek::Signals::pL2]).toStdString();
+                                    std::cout << QString("CP CA/L2: %1, CP P/L5: %2}, ").arg(SV.CarrierPhase[SkyPeek::Signals::caL2]).arg(SV.CarrierPhase[SkyPeek::Signals::L5]).toStdString();
                                     std::cout << QString("AZ: %2, EL: %1},").arg(SV.Elevation).arg(SV.Azimuth).toStdString();
                                     std::cout << std::endl;
                                 }

@@ -4,7 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 SET(PROJECT jpsdump)
 
-SET(DEPENDS_ON_PROJECTS Greis Common)
+SET(DEPENDS_ON_PROJECTS Greis)
 
 
 FILE(GLOB_RECURSE HEADERS "include/*.h")
@@ -25,7 +25,6 @@ PROJECT(${PROJECT} CXX)
 
 # includes
 
-include_directories("${Common_source_dir}")
 include_directories("${Greis_source_dir}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}")
@@ -35,7 +34,6 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT}")
 add_executable(${PROJECT} ${HEADERS} ${SOURCES} ${MOC_SOURCES})
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 14)
 SET_TARGET_PROPERTIES(${PROJECT} PROPERTIES LINKER_LANGUAGE CXX)
-add_dependencies(Greis Common)
 
 target_link_libraries(
     ${PROJECT}

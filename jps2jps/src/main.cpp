@@ -2,18 +2,19 @@
 #include <clocale>
 #include <locale>
 #include <iostream>
-#include "Common/Logger.h"
-#include "Common/Path.h"
-#include "Common/Connection.h"
-#include "Greis/DataChunk.h"
-#include "Greis/FileBinaryStream.h"
-#include "Greis/ChecksumComputer.h"
-#include "Greis/StdMessage/FileIdStdMessage.h"
-#include "Greis/StdMessage/MsgFmtStdMessage.h"
-#include "Greis/StdMessage/ParamsStdMessage.h"
-#include "Greis/StdMessage/SatIndexStdMessage.h"
-#include "Greis/StdMessage/SatNumbersStdMessage.h"
-#include "Greis/StdMessage/RcvDateStdMessage.h"
+#include "common/Logger.h"
+#include "common/Path.h"
+#include "common/Connection.h"
+#include "greis/DataChunk.h"
+#include "greis/FileBinaryStream.h"
+#include "greis/ChecksumComputer.h"
+#include "greis/StdMessage/FileIdStdMessage.h"
+#include "greis/StdMessage/MsgFmtStdMessage.h"
+#include "greis/StdMessage/ParamsStdMessage.h"
+#include "greis/StdMessage/SatIndexStdMessage.h"
+#include "greis/StdMessage/ExtSatIndexStdMessage.h"
+#include "greis/StdMessage/SatNumbersStdMessage.h"
+#include "greis/StdMessage/RcvDateStdMessage.h"
 
 using namespace Common;
 using namespace Greis;
@@ -114,7 +115,7 @@ using namespace Greis;
 
                 auto fileId = make_unique<Greis::FileIdStdMessage>(QString("JP055RLOGF JPS GREISTOOLS Receiver Log File").leftJustified(FileIdStdMessageFixedSize,' ').toLatin1().constData(),FileIdStdMessageFixedSize);
                 auto msgFmt = make_unique<Greis::MsgFmtStdMessage>("MF009JP010109F", MsgFmtStdMessageFixedSize);
-                QByteArray bMsgPMVer = QString("PM024rcv/ver/main=\"3.4.1 Mar,13,2012\",@").toLatin1().constData();
+                QByteArray bMsgPMVer = QString("PM024rcv/ver/main=\"3.7.2 Oct,11,2017\",@").toLatin1().constData();
                 bMsgPMVer.append(QString("%1").arg(Greis::ChecksumComputer::ComputeCs8(bMsgPMVer,bMsgPMVer.size()), 2, 16, QChar('0')).toUpper().toLatin1().constData());
                 auto msgPMVer = make_unique<Greis::ParamsStdMessage>(bMsgPMVer,bMsgPMVer.size());
 
@@ -126,6 +127,7 @@ using namespace Greis;
                 insertCRLF(target.get());
 
                 Greis::SatIndexStdMessage::UniquePtr_t lastSatIndexStdMessage; bool savedSI = false;
+                Greis::ExtSatIndexStdMessage::UniquePtr_t lastExtSatIndexStdMessage; bool savedSX = false;
                 Greis::SatNumbersStdMessage::UniquePtr_t lastSatNumbersStdMessage; bool savedNN = false;
                 Greis::RcvDateStdMessage::UniquePtr_t lastRcvDateStdMessage; bool savedRD = false;
 
@@ -135,13 +137,14 @@ using namespace Greis;
                     hasMore = file->ReadBody(stream, 1000);
                     for (auto& epoch : file->Body())
                     {
-                        bool hasRD = false, hasSI = false, hasNN = false;
+                        bool hasRD = false, hasSI = false, hasNN = false, hasSX = false;
                         if (startTime <= epoch->DateTime && epoch->DateTime <= stopTime)
                         {
                             sLogger.Trace(QString("Processing epoch %1").arg(epoch->DateTime.toString(Qt::ISODate)));
                             if(epochCounter==0 && accurateMode){
                                 for (auto& msg : epoch->Messages){
                                     auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
+                                    if(id=="SX"){hasSX = true; sLogger.Trace(QString("First epoch of interest already has [SX]"));}
                                     if(id=="SI"){hasSI = true; sLogger.Trace(QString("First epoch of interest already has [SI]"));}
                                     if(id=="NN"){hasNN = true; sLogger.Trace(QString("First epoch of interest already has [NN]"));}
                                     if(id=="RD"){hasRD = true; sLogger.Trace(QString("First epoch of interest already has [RD]"));}
@@ -159,9 +162,14 @@ using namespace Greis;
                                             target->AddMessage(std::move(lastRcvDateStdMessage));
                                             if(crlfMode)insertCRLF(target.get());
                                             }
-                                        if(!hasSI && savedSI){
+                                        if((!hasSI && !hasSX) && savedSI){
                                             sLogger.Trace(QString("Injecting [SI]..."));
                                             target->AddMessage(std::move(lastSatIndexStdMessage));
+                                            if(crlfMode)insertCRLF(target.get());
+                                        }
+                                        if((!hasSX) && savedSX){
+                                            sLogger.Trace(QString("Injecting [SX]..."));
+                                            target->AddMessage(std::move(lastExtSatIndexStdMessage));
                                             if(crlfMode)insertCRLF(target.get());
                                         }
                                         if(!hasNN && savedNN){
@@ -174,6 +182,8 @@ using namespace Greis;
                             }   else {
                                 for (auto& msg : epoch->Messages)
                                 {
+                                    auto id = static_cast<Greis::StdMessage*>(msg.get())->Id();
+                                    sLogger.Trace(QString("Copying %1").arg(QString::fromStdString(id)));
                                     target->AddMessage(std::move(msg));
                                     insertCRLF(target.get());
                                 }   
@@ -190,6 +200,10 @@ using namespace Greis;
                                                     if(id=="SI"){
                                                         lastSatIndexStdMessage=make_unique<SatIndexStdMessage>(msg->ToByteArray(),msg->Size());
                                                         savedSI = true;
+                                                    }
+                                                    if(id=="SX"){
+                                                        lastExtSatIndexStdMessage=make_unique<ExtSatIndexStdMessage>(msg->ToByteArray(),msg->Size());
+                                                        savedSX = true;
                                                     }
                                                     if(id=="NN"){
                                                         lastSatNumbersStdMessage=make_unique<SatNumbersStdMessage>(msg->ToByteArray(),msg->Size());
