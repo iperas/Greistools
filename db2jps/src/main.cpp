@@ -3,12 +3,12 @@
 #include <clocale>
 #include <locale>
 #include <iostream>
-#include "Common/Logger.h"
-#include "Common/Path.h"
-#include "Common/Connection.h"
-#include "Greis/DataChunk.h"
-#include "Greis/MySqlSink.h"
-#include "Greis/MySqlSource.h"
+#include "common/Logger.h"
+#include "common/Path.h"
+#include "common/Connection.h"
+#include "greis/DataChunk.h"
+#include "greis/MySqlSink.h"
+#include "greis/MySqlSource.h"
 
 using namespace Common;
 using namespace Greis;

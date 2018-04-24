@@ -92,7 +92,7 @@ set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/ThirdParty)
 ExternalProject_Add (
  libGreis
  GIT_REPOSITORY "https://github.com/iperas/Greis"
- GIT_TAG "master"
+ GIT_TAG "Issues/4"
  UPDATE_COMMAND ""
  INSTALL_COMMAND ""
  BUILD_IN_SOURCE 1
@@ -107,7 +107,7 @@ if (WIN32)
     SET(pathCommon ${Greis_source_dir}/build/lib/greis.lib)
 endif (WIN32)
 set_target_properties( Greis PROPERTIES IMPORTED_LOCATION ${pathGreis} )
-add_dependencies( Greis libgreis )
+add_dependencies( Greis libGreis )
 
 add_subdirectory(jps2db)
 add_subdirectory(db2jps)

@@ -1,10 +1,10 @@
 #include <iostream>
-#include "Common/Logger.h"
-#include "Common/Path.h"
-#include "Common/Connection.h"
-#include "Greis/DataChunk.h"
-#include "Greis/MySqlSink.h"
-#include <Greis/FileBinaryStream.h>
+#include "common/Logger.h"
+#include "common/Path.h"
+#include "common/Connection.h"
+#include "greis/DataChunk.h"
+#include "greis/MySqlSink.h"
+#include <greis/FileBinaryStream.h>
 
 using namespace Common;
 using namespace Greis;
